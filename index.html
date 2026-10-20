@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Connector - Chat App</title>
+<style>
+body{font-family:Arial;background:#f0f2f5;margin:0;padding:20px}
+h1{text-align:center;color:#333}
+.container{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.box{background:white;width:350px;border-radius:10px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+select{width:100%;padding:8px;margin-bottom:10px;border-radius:5px}
+.chat{height:300px;overflow-y:auto;border:1px solid #ddd;padding:10px;border-radius:5px;background:#fafafa;margin-bottom:10px}
+.msg{padding:8px 10px;border-radius:15px;margin:5px 0;max-width:80%}
+.me{background:#0084ff;color:white;margin-left:auto}
+.other{background:#e4e6eb}
+.input-area{display:flex;gap:5px}
+input{flex:1;padding:10px;border-radius:20px;border:1px solid #ddd}
+button{padding:10px 15px;border:none;background:#0084ff;color:white;border-radius:20px;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>🌐 Global Connector</h1>
+<div class="container">
+<div class="box">
+<h3>User A</h3>
+<select id="langA"><option value="en">English</option><option value="ur" selected>Urdu</option><option value="fr">French</option><option value="ar">Arabic</option><option value="es">Spanish</option><option value="de">German</option></select>
+<div class="chat" id="chatA"></div>
+<div class="input-area"><input id="inputA" placeholder="Type message..."><button onclick="sendA()">Send</button></div>
+</div>
+<div class="box">
+<h3>User B</h3>
+<select id="langB"><option value="en" selected>English</option><option value="ur">Urdu</option><option value="fr">French</option><option value="ar">Arabic</option><option value="es">Spanish</option><option value="de">German</option></select>
+<div class="chat" id="chatB"></div>
+<div class="input-area"><input id="inputB" placeholder="Type message..."><button onclick="sendB()">Send</button></div>
+</div>
+</div>
+<script>
+async function translate(text, from, to){
+if(from===to) return text;
+try{
+const res=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`);
+const data=await res.json();
+return data.responseData.translatedText;
+}catch(e){return text}
+}
+function addMsg(chatId, text, isMe){
+const chat=document.getElementById(chatId);
+const div=document.createElement('div');
+div.className='msg '+(isMe?'me':'other');
+div.innerText=text;
+chat.appendChild(div);
+chat.scrollTop=chat.scrollHeight;
+}
+async function sendA(){
+const input=document.getElementById('inputA');
+const text=input.value.trim();
+if(!text) return;
+const from=document.getElementById('langA').value;
+const to=document.getElementById('langB').value;
+addMsg('chatA', text, true);
+addMsg('chatB', 'Translating...', false);
+const translated=await translate(text, from, to);
+document.getElementById('chatB').lastChild.remove();
+addMsg('chatB', translated, false);
+addMsg('chatA', 'Translated to '+to+': '+translated, true);
+input.value='';
+}
+async function sendB(){
+const input=document.getElementById('inputB');
+const text=input.value.trim();
+if(!text) return;
+const from=document.getElementById('langB').value;
+const to=document.getElementById('langA').value;
+addMsg('chatB', text, true);
+addMsg('chatA', 'Translating...', false);
+const translated=await translate(text, from, to);
+document.getElementById('chatA').lastChild.remove();
+addMsg('chatA', translated, false);
+addMsg('chatB', 'Translated to '+to+': '+translated, true);
+input.value='';
+}
+</script>
+</body>
+</html>
